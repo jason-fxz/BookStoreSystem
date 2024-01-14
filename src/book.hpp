@@ -99,10 +99,10 @@ class BookDataBase {
 
   public:
     BookDataBase() :
-        lISBN("./data/db1.bin", "./data/db2.bin"),
-        lBookName("./data/db3.bin", "./data/db4.bin"),
-        lAuthor("./data/db5.bin", "./data/db6.bin"),
-        lKeyword("./data/db7.bin", "./data/db8.bin") {}
+        lISBN("./db1.bin", "./db2.bin"),
+        lBookName("./db3.bin", "./db4.bin"),
+        lAuthor("./db5.bin", "./db6.bin"),
+        lKeyword("./db7.bin", "./db8.bin") {}
 
     ~BookDataBase() = default;
 
@@ -169,7 +169,7 @@ class BookDataBase {
         if (obj.ISBN != cur) {
             lISBN.remove(cur, cache);
             lISBN.insert(obj.ISBN, obj);
-        } else lISBN.insertkey(cur, obj);
+        } else lISBN.modify(cur, obj);
         if (Camp(obj.name, cache.name) != 0) {
             lBookName.remove(cache.name, obj.ISBN);
             lBookName.insert(obj.name, obj.ISBN);

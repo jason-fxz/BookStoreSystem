@@ -3,6 +3,7 @@
 #ifndef USER_HPP
 #define USER_HPP
 
+#include "exception.hpp"
 #include "utility.hpp"
 #include "database.hpp"
 
@@ -48,7 +49,7 @@ struct User {
     }
     
     friend ostream &operator<<(ostream &os, const User &rhs) {
-        os << rhs.userid << ',' << rhs.username << ',' << rhs.password << ','
+        os << "UserId=" << rhs.userid << ",UserName=" << rhs.username << ",Password=" << rhs.password << ",privilege="
            << rhs.privilege;
         return os;
     }
@@ -68,7 +69,7 @@ private:
 
 public:
     UserDataBase() :
-        lUserID("./data/db9.bin", "./data/db10.bin") {
+        lUserID("./db9.bin", "./db10.bin") {
             if (lUserID.empty()) {
                 AddUser(User("root", "root", "sjtu", eRoot));
             }
@@ -77,23 +78,23 @@ public:
     ~UserDataBase() = default;
 
     void AddUser(const User &obj) {
-        std::cerr << "AddUser " << obj << std::endl;
-        if (!lUserID.insertkey(obj.userid, obj)) throw std::runtime_error("AddUser: UserID already exists");
+        // std::cerr << "AddUser " << obj << std::endl;
+        if (!lUserID.insertkey(obj.userid, obj)) throw UserSystemError("UserDataBase::AddUser: UserID [" + std::string(obj.userid) + "] already exists");
     }
 
     void GetUser(const UserID_t &userid, User &user) {
         std::vector<User> tmp;
         lUserID.fetchall(userid, tmp);
-        if (tmp.empty()) throw std::runtime_error("GetUser: fetchall failed");
+        if (tmp.empty()) throw UserSystemError("UserDataBase::GetUser: no such user");
         user = tmp[0];
     }
 
     void DeleteUser(const UserID_t &userid) {
-        if (!lUserID.removekey(userid)) throw std::runtime_error("DeleteUser: no such user");
+        if (!lUserID.removekey(userid)) throw UserSystemError("UserDataBase::DeleteUser: no such user");
     }
 
     void ModifyUser(const User &obj) {
-        if (!lUserID.modify(obj.userid, obj)) throw std::runtime_error("ModifyUser: modify failed");
+        if (!lUserID.modify(obj.userid, obj)) throw UserSystemError("UserDataBase::ModifyUser: modify failed");
     }
 
     void ShowAllUser() {

@@ -8,9 +8,9 @@
 namespace acm {
 
 class Exception {
-protected:
+  protected:
     static std::string massage;
-public:
+  public:
     Exception() = default;
     Exception(const std::string &msg) {
         massage = msg;
@@ -21,22 +21,45 @@ public:
     }
 };
 
+std::string acm::Exception::massage;
 
-class PrivilegeError : public Exception {
-public:
-    PrivilegeError(const std::string &msg) : Exception("PrivilegeError: " + msg) {}
+// // 用于
+// class PrivilegeError : public Exception {
+// public:
+//     PrivilegeError(const std::string &msg) : Exception("PrivilegeError: " + msg) {}
+// };
+
+// 用于用户系统的错误
+class UserSystemError : public Exception {
+  public:
+    UserSystemError(const std::string &msg) : Exception("UserSystemError: " +
+                msg) {}
 };
 
-class UserError : public Exception {
-public:
-    UserError(const std::string &msg) : Exception("UserError: " + msg) {}
+// 用于书籍系统的错误
+class BookSystemError : public Exception {
+  public:
+    BookSystemError(const std::string &msg) : Exception("BookSystemError: " +
+                msg) {}
 };
 
+// 用于命令格式输入错误
 class CommandError : public Exception {
-public:
+  public:
     CommandError(const std::string &msg) : Exception("CommandError: " + msg) {}
 };
 
+// 用于日志系统错误
+class LogSystemError : public Exception {
+  public:
+    LogSystemError(const std::string &msg) : Exception("LogSystemError: " + msg) {}
+};
+
+// Just for exit the program
+class Exit : public Exception {
+  public:
+    Exit() = default;
+};
 
 }
 

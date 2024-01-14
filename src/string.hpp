@@ -73,13 +73,17 @@ class String {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const String &str) {
-        os << std::setw(len) << str.data;
+        os << str.data;
         return os;
     }
 
     friend std::istream &operator>>(std::istream &is, String &str) {
         is >> str.data;
         return is;
+    }
+
+    operator std::string() const {
+        return std::string(data);
     }
 };
 
