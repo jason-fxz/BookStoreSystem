@@ -11,12 +11,10 @@ using std::string;
 
 namespace acm {
 
-template<class T, int info_len = 2>
 class File {
-  private:
+  protected:
     fstream file;
     string file_name;
-    int sizeofT = sizeof(T);
   public:
     File() = default;
 
@@ -24,17 +22,6 @@ class File {
 
     ~File() {
         file.close();
-    }
-
-    // init the file: create file if not exist or clear the file
-    void init(string FN = "") {
-        if (FN != "") file_name = FN;
-        file.open(file_name, std::ios::out | std::ios::binary);
-        int tmp = 0;
-        for (int i = 0; i < info_len; ++i)
-            file.write(reinterpret_cast<char *>(&tmp), sizeof(int));
-        file.close();
-        file.open(file_name, std::ios::in | std::ios::out | std::ios::binary);
     }
 
     // check if the file exist
@@ -46,9 +33,50 @@ class File {
     }
 
     // just open the file
-    void open(string FN = "") {
+    virtual void open(string FN = "", std::ios_base::openmode mode = std::ios::in | std::ios::out) {
         if (FN != "") file_name = FN;
-        file.open(file_name, std::ios::in | std::ios::out | std::ios::binary);
+        file.open(file_name, mode);
+    }
+
+    // init the file: create file if not exist or clear the file
+    virtual void init(string FN = "", std::ios_base::openmode mode = std::ios::in | std::ios::out) {
+        if (FN != "") file_name = FN;
+        file.open(file_name, std::ios::out);
+        file.close();
+        file.open(file_name, mode);
+    }
+
+};
+
+
+template<class T, int info_len = 2>
+class FileData : public File {
+  private:
+    // fstream file;
+    // string file_name;
+    int sizeofT = sizeof(T);
+  public:
+    FileData() = default;
+
+    FileData(const string &file_name) : File(file_name) {}
+
+    ~FileData() = default;
+
+    // init the file: create file if not exist or clear the file
+    virtual void init(string FN = "", std::ios_base::openmode mode = std::ios::in | std::ios::out | std::ios::binary) override {
+        if (FN != "") file_name = FN;
+        file.open(file_name, std::ios::out | std::ios::binary);
+        int tmp = 0;
+        for (int i = 0; i < info_len; ++i)
+            file.write(reinterpret_cast<char *>(&tmp), sizeof(int));
+        file.close();
+        file.open(file_name, mode);
+    }
+
+    // just open the file
+    virtual void open(string FN = "", std::ios_base::openmode mode = std::ios::in | std::ios::out | std::ios::binary) override {
+        if (FN != "") file_name = FN;
+        file.open(file_name, mode);
     }
 
     //读出第 n 个 int 的值赋给 tmp，1_base

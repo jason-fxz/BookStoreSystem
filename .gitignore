@@ -34,3 +34,4 @@
 # Debug testcases
 /testcases/**
 *.db
+*.txt

@@ -4,6 +4,7 @@
 #define STRING_HPP
 
 #include <fstream>
+#include <iomanip>
 
 namespace acm {
 
@@ -19,6 +20,9 @@ class String {
     }
     String(const String &rhs) {
         memcpy(data, rhs.data, sizeof(data));
+    }
+    String(const std::string &rhs) {
+        memcpy(data, rhs.c_str(), sizeof(data));
     }
     ~String() = default;
 
@@ -38,6 +42,10 @@ class String {
         return strcmp(data, rhs.data) == 0;
     }
 
+    bool operator!=(const String &rhs) const {
+        return strcmp(data, rhs.data) != 0;
+    }
+
     bool operator<(const String &rhs) const {
         return strcmp(data, rhs.data) < 0;
     }
@@ -46,22 +54,26 @@ class String {
         return data[0] == '\0';
     }
 
+    void clear() {
+        memset(data, 0, sizeof(data));
+    }
+
     char &operator[](const int &k) {
-        static_assert(0 <= k && k < len, "String [] out of bound");
+        // static_assert(0 <= k && k < len, "String [] out of bound");
         return data[k];
     }
 
     char operator[](const int &k) const {
-        static_assert(0 <= k && k < len, "String [] out of bound");
+        // static_assert(0 <= k && k < len, "String [] out of bound");
         return data[k];
     }
 
-    char *c_str() const {
+    const char *c_str() const {
         return data;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const String &str) {
-        os << str.data;
+        os << std::setw(len) << str.data;
         return os;
     }
 

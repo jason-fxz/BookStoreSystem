@@ -4,6 +4,7 @@
 #define BOOKS_HPP
 
 #include "utility.hpp"
+#include "database.hpp"
 
 namespace acm {
 
@@ -19,6 +20,14 @@ struct Book {
     int        quantity;
 
     Book() : ISBN(), name(), author(), keyword(), price(0), quantity(0) {}
+
+    Book(const ISBN_t &_ISBN) :
+        ISBN(_ISBN),
+        name(),
+        author(),
+        keyword(),
+        price(0),
+        quantity(0) {}
 
     Book(const ISBN_t &_ISBN,
          const BookName_t &_name,
@@ -64,9 +73,8 @@ struct Book {
     }
 
     friend ostream &operator<<(ostream &os, const Book &obj) {
-        os << obj.ISBN << " " << obj.name << " " << obj.author << " " << obj.keyword <<
-           " " << obj.price << " "
-           << obj.quantity;
+        os << obj.ISBN << "\t" << obj.name << "\t" << obj.author << "\t" << obj.keyword <<
+           "\t" << obj.price << "\t" << obj.quantity;
         return os;
     }
 
@@ -75,6 +83,116 @@ struct Book {
            obj.quantity;
         return is;
     }
+};
+
+
+// 书本数据库
+class BookDataBase {
+  private:
+    database<ISBN_t, Book>       lISBN;
+    database<BookName_t, ISBN_t> lBookName;
+    database<Author_t, ISBN_t>   lAuthor;
+    database<Keyword_t, ISBN_t>  lKeyword;
+
+    ISBN_t cur; // 当前操作的书本 ISBN
+    Book cache; // 缓存当前操作的书本信息
+
+  public:
+    BookDataBase() :
+        lISBN("./data/db1.bin", "./data/db2.bin"),
+        lBookName("./data/db3.bin", "./data/db4.bin"),
+        lAuthor("./data/db5.bin", "./data/db6.bin"),
+        lKeyword("./data/db7.bin", "./data/db8.bin") {}
+
+    ~BookDataBase() = default;
+
+    void AddBook(const Book &obj) {
+        lISBN.insert(obj.ISBN, obj);
+        if (!obj.name.empty()) lBookName.insert(obj.name, obj.ISBN);
+        if (!obj.author.empty()) lAuthor.insert(obj.author, obj.ISBN);
+        if (!obj.ISBN.empty()) lKeyword.insert(obj.keyword, obj.ISBN);
+    }
+
+    void SearchBookByISBN(const ISBN_t &ISBN, std::vector<Book> &res) {
+        lISBN.fetchall(ISBN, res);
+    }
+
+    void SearchBookByName(const BookName_t &name, std::vector<Book> &res) {
+        std::vector<ISBN_t> tmp;
+        lBookName.fetchall(name, tmp);
+        for (auto &ISBN : tmp)
+            lISBN.fetchall(ISBN, res);
+    }
+
+    void SearchBookByAuthor(const Author_t &author, std::vector<Book> &res) {
+        std::vector<ISBN_t> tmp;
+        lAuthor.fetchall(author, tmp);
+        for (auto &ISBN : tmp)
+            lISBN.fetchall(ISBN, res);
+    }
+
+    void SearchBookByKeywords(const Keyword_t &keywords, std::vector<Book> &res) {
+        std::vector<Keyword_t> tmpkeywords;
+        std::vector<ISBN_t> tmp;
+        SplitString(keywords, tmpkeywords, '|');
+        for (auto &key : tmpkeywords)
+            lKeyword.fetchall(key, tmp);
+        for (auto &ISBN : tmp)
+            lISBN.fetchall(ISBN, res);
+    }
+
+    void SearchBookByKeyword(const Keyword_t &keyword, std::vector<Book> &res) {
+        std::vector<ISBN_t> tmp;
+        lKeyword.fetchall(keyword, tmp);
+        for (auto &ISBN : tmp)
+            lISBN.fetchall(ISBN, res);
+    }
+
+    void ShowAllBook(std::vector<Book> &res) {
+        lISBN.fetchall("", res);
+    }
+
+    // 根据 ISBN 选择一本书，如果没有则创建
+    void SelectByISBN(const ISBN_t &ISBN) {
+        cur = ISBN;
+        lISBN.insertkey(ISBN, Book(ISBN));
+        std::vector<Book> booklist;
+        lISBN.fetchall(cur, booklist);
+        if (booklist.size() != 1) throw std::runtime_error("SelectByISBN: booklist.size() != 1");
+        cache = booklist[0];
+
+    }
+
+    // 修改 cur 对应书本信息， 使用前一定要 SelectByISBN
+    void ModifyBook(const Book &obj) {
+        if (cur.empty()) throw std::runtime_error("No selected book");
+        if (obj.ISBN != cur) {
+            lISBN.remove(cur, cache);
+            lISBN.insert(obj.ISBN, obj);
+        } else lISBN.insertkey(cur, obj);
+        if (Camp(obj.name, cache.name) != 0) {
+            lBookName.remove(cache.name, obj.ISBN);
+            lBookName.insert(obj.name, obj.ISBN);
+        }
+        if (Camp(obj.author, cache.author) != 0) {
+            lAuthor.remove(cache.author, obj.ISBN);
+            lAuthor.insert(obj.author, obj.ISBN);
+        }
+        if (Camp(obj.keyword, cache.keyword) != 0) {
+            std::vector<Keyword_t> keywords;
+            SplitString(cache.keyword, keywords, '|');
+            for (auto &key : keywords)
+                lKeyword.remove(key, obj.ISBN);
+            SplitString(obj.keyword, keywords, '|');
+            for (auto &key : keywords)
+                lKeyword.insert(key, obj.ISBN);
+        }
+    }
+
+    void GetCache(Book &res) {
+        res = cache;
+    }
+
 };
 
 }

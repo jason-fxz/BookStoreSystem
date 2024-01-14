@@ -4,6 +4,7 @@
 #define USER_HPP
 
 #include "utility.hpp"
+#include "database.hpp"
 
 namespace acm {
 
@@ -47,7 +48,7 @@ struct User {
     }
     
     friend ostream &operator<<(ostream &os, const User &rhs) {
-        os << rhs.userid << '\t' << rhs.username << '\t' << rhs.password << '\t'
+        os << rhs.userid << ',' << rhs.username << ',' << rhs.password << ','
            << rhs.privilege;
         return os;
     }
@@ -59,6 +60,47 @@ struct User {
 
 };
 
+
+// 用户数据库
+class UserDataBase {
+private:
+    database<UserID_t, User> lUserID;
+
+public:
+    UserDataBase() :
+        lUserID("./data/db9.bin", "./data/db10.bin") {
+            if (lUserID.empty()) {
+                AddUser(User("root", "root", "sjtu", eRoot));
+            }
+        }
+
+    ~UserDataBase() = default;
+
+    void AddUser(const User &obj) {
+        std::cerr << "AddUser " << obj << std::endl;
+        if (!lUserID.insertkey(obj.userid, obj)) throw std::runtime_error("AddUser: UserID already exists");
+    }
+
+    void GetUser(const UserID_t &userid, User &user) {
+        std::vector<User> tmp;
+        lUserID.fetchall(userid, tmp);
+        if (tmp.empty()) throw std::runtime_error("GetUser: fetchall failed");
+        user = tmp[0];
+    }
+
+    void DeleteUser(const UserID_t &userid) {
+        if (!lUserID.removekey(userid)) throw std::runtime_error("DeleteUser: no such user");
+    }
+
+    void ModifyUser(const User &obj) {
+        if (!lUserID.modify(obj.userid, obj)) throw std::runtime_error("ModifyUser: modify failed");
+    }
+
+    void ShowAllUser() {
+        std::cerr << "All Users:" << std::endl;
+        lUserID.ShowAll();
+    }
+};
 
 
 }

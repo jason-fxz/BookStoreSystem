@@ -1,17 +1,18 @@
 // key2value 数据库
 
+#ifndef DATABASE_HPP
+#define DATABASE_HPP
+
 #include <fstream>
 #include <list>
 #include <vector>
 #include "fileio.hpp"
 #include "utility.hpp"
 
-
-
 namespace acm {
 
 template <class key_t, class value_t>
-class blocklist {
+class     blocklist {
   private:
     static const int BLOCK_SIZE = 256;
     static const int MAX_SIZE = 255;
@@ -22,7 +23,7 @@ class blocklist {
         key_t key;
         value_t value;
 
-        pair_t() {}
+        pair_t() : key(), value() {}
         pair_t(const key_t &_key, const value_t &_value) : key(_key), value(_value) {}
         pair_t(const pair_t &rhs) : key(rhs.key), value(rhs.value) {}
 
@@ -61,13 +62,13 @@ class blocklist {
 
     // head 是存放 Nodehead 的链表， free_head 是空闲的 Nodehead 链表。
     std::list<Nodehead> head, free_head; // 嫌麻烦，还是 std::list 算了。
+    using list_it = typename std::list<Nodehead>::iterator;
 
     struct Nodedata {
         pair_t data[BLOCK_SIZE];
         pair_t &operator[](const int &k) { return data[k]; }
     };
 
-    using list_it = typename std::list<Nodedata>::iterator;
 
     Nodedata cache1, cache2; // 用于读写的缓存
 
@@ -76,8 +77,8 @@ class blocklist {
        将内容读入后，在内存中以链表存储。
        data_file 存放 Nodedata 按照 head_file.index 索引。
     */
-    File<Nodehead> head_file;
-    File<Nodedata> data_file;
+    FileData<Nodehead> head_file;
+    FileData<Nodedata> data_file;
 
 
     // 创建一个新的 NodeData 并返回 index
@@ -93,9 +94,8 @@ class blocklist {
         return index;
     }
 
-
     // 删除一个节点，并回收
-    void recyc(const list_it &it) {
+    void recyc(const typename std::list<Nodehead>::iterator &it) {
         free_head.push_back(*it);
         head.erase(it);
     }
@@ -104,6 +104,12 @@ class blocklist {
     list_it findhead(const pair_t &pair) {
         list_it it = head.begin();
         while (it != head.end() && Camp(pair, it->max_pair) > 0) ++it;
+        return it;
+    }
+
+    list_it findhead(const key_t &key) {
+        list_it it = head.begin();
+        while (it != head.end() && Camp(key, it->max_pair.key) > 0) ++it;
         return it;
     }
 
@@ -149,7 +155,7 @@ class blocklist {
             data_file.init();
             head_file.write_info(1, 1);
             head_file.write_info(0, 2);
-            cache1[0] = pair_t("", 0);
+            cache1[0] = pair_t();
             head.push_back(Nodehead{data_file.writenew(cache1), 1, cache1[0]});
         } else {
             // 从已有文件中读取 head, free_head
@@ -190,6 +196,10 @@ class blocklist {
         }
     }
 
+    bool empty() const {
+        return head.size() == 1 && head.begin()->count == 1;
+    }
+
   public:
     // 插入键值对 [key, value]
     void insert(const key_t &key, const value_t &value) {
@@ -216,26 +226,89 @@ class blocklist {
         }
     }
 
-    // 删除键值对 [key, value]
-    void remove(const key_t &key, const value_t &value) {
+    // 插入键值对 [key, value] 保证 key 对应 value 唯一，若已有 key 则不创建
+    bool insertkey(const key_t &key, const value_t &value) {
+        pair_t pair(key, value);
+        list_it it = findhead(key);
+        if (it == head.end()) {
+            --it;
+            data_file.read(cache1, it->index);
+            cache1[it->count++] = pair;
+            it->max_pair = pair;
+        } else {
+            data_file.read(cache1, it->index);
+            int k = 0;
+            while (k < it->count && Camp(key, cache1[k].key) > 0) ++k;
+            if (Camp(key, cache1[k].key) == 0) return false; // 已有 key
+            for (int i = it->count; i > k; --i) cache1[i] = cache1[i - 1];
+            cache1[k] = pair;
+            ++it->count;
+        }
+        if (split(it)) {
+            data_file.update(cache1, it->index);
+            data_file.update(cache2, std::next(it)->index);
+        } else {
+            data_file.update(cache1, it->index);
+        }
+        return true;
+    }
+
+    // 删除键值对 [key, value] 成功返回 true 失败返回 false 
+    bool remove(const key_t &key, const value_t &value) {
         pair_t pair(key, value);
         list_it it = findhead(pair);
-        if (it == head.end()) return;
+        if (it == head.end()) return false; // 找不到键值对
         data_file.read(cache1, it->index);
         int k = 0;
         while (k < it->count && Camp(pair, cache1[k]) > 0) ++k;
-        if (k == it->count || Camp(pair, cache1[k]) != 0) return; // 找不到键值对
+        if (k == it->count || Camp(pair, cache1[k]) != 0) return false; // 找不到键值对
         for (int i = k; i < it->count - 1; ++i) cache1[i] = cache1[i + 1];
         --it->count;
         merge(it);
         data_file.update(cache1, it->index);
+        return true;
     }
 
-    // 获取键 [key] 对应所有值
-    void fetchall(const key_t &key, std::vector<int> &res) {
-        res.clear();
-        pair_t pair(key, 0);
-        list_it it = findhead(pair);
+    // 根据 key, 删除键值对 [key, value] ，应该认为 key 对应 value 唯一,成功返回 true 失败返回 false 
+    bool removekey(const key_t &key) {
+        list_it it = findhead(key);
+        if (it == head.end()) return false; // 找不到键值对
+        data_file.read(cache1, it->index);
+        int k = 0;
+        while (k < it->count && Camp(key, cache1[k].key) > 0) ++k;
+        if (k == it->count || Camp(key, cache1[k].key) != 0) return false; // 找不到键值对
+        for (int i = k; i < it->count - 1; ++i) cache1[i] = cache1[i + 1];
+        --it->count;
+        merge(it);
+        data_file.update(cache1, it->index);
+        return true;
+    }
+
+    // 根据 key, 修改对应 value ，应该认为 key 对应 value 唯一, 成功返回 true 失败返回 false
+    bool modify(const key_t &key, const value_t &value) {
+        list_it it = findhead(key);
+        if (it == head.end()) return false; // 找不到键值对
+        data_file.read(cache1, it->index);
+        int k = 0;
+        while (k < it->count && Camp(key, cache1[k].key) > 0) ++k;
+        if (k == it->count || Camp(key, cache1[k].key) != 0) return false; // 找不到键值对
+        cache1[k].value = value;
+        return true;
+    }
+
+    // 获取键 [key] 对应所有值, 添加到 res 末尾, 若 key 为空，则获取所有值
+    void fetchall(const key_t &key, std::vector<value_t> &res) {
+        if (key.empty()) {
+            bool flag = 0;
+            for (auto &it : head) {
+                data_file.read(cache1, it.index);
+                for (int i = 0; i < it.count; ++i) {
+                    if (flag )res.push_back(cache1[i].value);
+                    flag = 1;
+                }
+            }
+        }
+        list_it it = findhead(key);
         while (it != head.end()) {
             data_file.read(cache1, it->index);
             int k = 0;
@@ -250,6 +323,18 @@ class blocklist {
         }
     }
 
+    // 显示所有数据，调试用
+    void ShowAll() {
+        bool flag = 0;
+        for (auto &it : head) {
+            data_file.read(cache1, it.index);
+            for (int i = 0; i < it.count; ++i) {
+                if (flag) std::cerr << cache1[i] << std::endl;
+                flag = 1;
+            }
+        }
+    }
+
 };
 
 // future: 实现 B+ 树，
@@ -258,3 +343,6 @@ template <class key_t, class value_t>
 using database = blocklist<key_t, value_t>;
 
 }
+
+
+#endif // DATABASE_HPP
