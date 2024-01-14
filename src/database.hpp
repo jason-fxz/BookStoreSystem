@@ -217,6 +217,7 @@ class     blocklist {
             for (int i = it->count; i > k; --i) cache1[i] = cache1[i - 1];
             cache1[k] = pair;
             ++it->count;
+            it->max_pair = cache1[it->count - 1];
         }
         if (split(it)) {
             data_file.update(cache1, it->index);
@@ -243,6 +244,7 @@ class     blocklist {
             for (int i = it->count; i > k; --i) cache1[i] = cache1[i - 1];
             cache1[k] = pair;
             ++it->count;
+            it->max_pair = cache1[it->count - 1];
         }
         if (split(it)) {
             data_file.update(cache1, it->index);
@@ -264,6 +266,7 @@ class     blocklist {
         if (k == it->count || Camp(pair, cache1[k]) != 0) return false; // 找不到键值对
         for (int i = k; i < it->count - 1; ++i) cache1[i] = cache1[i + 1];
         --it->count;
+        it->max_pair = cache1[it->count - 1];
         merge(it);
         data_file.update(cache1, it->index);
         return true;
@@ -279,6 +282,7 @@ class     blocklist {
         if (k == it->count || Camp(key, cache1[k].key) != 0) return false; // 找不到键值对
         for (int i = k; i < it->count - 1; ++i) cache1[i] = cache1[i + 1];
         --it->count;
+        it->max_pair = cache1[it->count - 1];
         merge(it);
         data_file.update(cache1, it->index);
         return true;
@@ -293,6 +297,8 @@ class     blocklist {
         while (k < it->count && Camp(key, cache1[k].key) > 0) ++k;
         if (k == it->count || Camp(key, cache1[k].key) != 0) return false; // 找不到键值对
         cache1[k].value = value;
+        it->max_pair = cache1[it->count - 1];
+        data_file.update(cache1, it->index);
         return true;
     }
 
