@@ -9,6 +9,7 @@
 #include "system.hpp"
 #include <functional>
 #include <stdexcept>
+#include <string>
 
 
 namespace acm {
@@ -174,7 +175,7 @@ class CommandManager {
         if (!isValidUsername(argv[4])) throw CommandError("useradd: invalid Username");
         if (Users.GetCurrentUserPrivilege() < eAdmin) throw
             CommandError("useradd: Permission denied");
-        Users.UserAdd(argv[1], argv[2], acm::Privilege_t(std::atoi(argv[3].c_str())),
+        Users.UserAdd(argv[1], argv[2], acm::Privilege_t(std::stoi(argv[3])),
                       argv[4]);
         Logs.log(LogUser() + " useradd UserID=" + argv[1] + " Password=" + argv[2] +
                  " Privilege=" + argv[3] + " Username=" + argv[4]);
@@ -232,9 +233,10 @@ class CommandManager {
         if (argv.size() != 3) throw CommandError("buy: invalid arguments");
         if (!isValidISBN(argv[1])) throw CommandError("buy: invalid ISBN");
         if (!isValidQuantity(argv[2])) throw CommandError("buy: invalid Quantity");
+        if (std::stoll(argv[2]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
         if (Users.GetCurrentUserPrivilege() < eCustomer) throw
             CommandError("buy: Permission denied");
-        double cost = Books.Buy(argv[1], std::atoi(argv[2].c_str()));
+        double cost = Books.Buy(argv[1], std::stoul(argv[2]));
         Logs.trade(cost);
         Logs.log(LogUser() + " buy ISBN=" + argv[1] + " Quantity=" + argv[2]);
         Logs.log("trade: + " + std::to_string(cost));
@@ -318,17 +320,18 @@ class CommandManager {
     void cImport() {
         if (argv.size() != 3) throw CommandError("import: invalid arguments");
         if (!isValidQuantity(argv[1])) throw CommandError("import: invalid Quantity");
+        if (std::stoll(argv[1]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
         if (!isValidPrice(argv[2])) throw CommandError("import: invalid TotalCost");
         if (Users.GetCurrentUserPrivilege() < eAdmin) throw
             CommandError("import: Permission denied");
         ISBN_t select = Users.selectstack[Users.selectstack.size() - 1];
         if (select.empty()) throw CommandError("modify: No book selected");
         Books.Select(select);
-        Books.Import(std::atoi(argv[1].c_str()));
-        Logs.trade(-1.0 * std::atof(argv[2].c_str()));
+        Books.Import(std::stoul(argv[1]));
+        Logs.trade(-1.0 * std::stod(argv[2]));
         Logs.log(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1] +
                  " TotalCost=" + argv[2]);
-        Logs.log("trade: - " + std::to_string(Abs(std::atof(argv[2].c_str()))));
+        Logs.log("trade: - " + std::to_string(Abs(std::stod(argv[2]))));
         if (Users.GetCurrentUserPrivilege() == eAdmin) {
             Logs.work(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1]
                       + " TotalCost=" + argv[2]);
@@ -346,7 +349,7 @@ class CommandManager {
             Logs.log(LogUser() + " show finance");
         } else if (argv.size() == 3) {
             if (!isValidCount(argv[2])) throw CommandError("show finance: invalid Count");
-            Logs.showFinance(std::atoi(argv[2].c_str()));
+            Logs.showFinance(std::stoi(argv[2]));
             Logs.log(LogUser() + " show finance " + argv[2]);
         }
     }

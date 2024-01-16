@@ -151,7 +151,7 @@ class BookSystem : private BookDataBase {
     }
 
     // 购买图书
-    double Buy(const ISBN_t &ISBN, const int &quantity) {
+    double Buy(const ISBN_t &ISBN, const size_t &quantity) {
         std::vector<Book> tmp;
         SearchBookByISBN(ISBN, tmp);
         if (tmp.empty()) throw BookSystemError("Buy: No such books");
@@ -179,7 +179,7 @@ class BookSystem : private BookDataBase {
     }
 
     // 图书进货
-    void Import(const int &quantity) {
+    void Import(const size_t &quantity) {
         Book tmp;
         GetCache(tmp);
         tmp.quantity += quantity;

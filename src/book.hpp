@@ -5,6 +5,7 @@
 
 #include "utility.hpp"
 #include "database.hpp"
+#include <cstddef>
 
 namespace acm {
 
@@ -17,7 +18,7 @@ struct Book {
     Keyword_t  keyword;
 
     double     price;
-    int        quantity;
+    size_t        quantity;
 
     Book() : ISBN(), name(), author(), keyword(), price(0), quantity(0) {}
 

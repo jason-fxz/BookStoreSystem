@@ -132,7 +132,7 @@ void SplitString(const String<len> &str, std::vector<String<len>> &res,
     int size = strlen(str.c_str());
     bool flag_quote = 0; // when visit "
     for (int i = 0; i < size; ++i) {
-        if (str[i] == '\"') flag_quote ^= 1;
+        // if (str[i] == '\"') flag_quote ^= 1;
         if (str[i] == ch && flag_quote == 0) {
             if (!tmp.empty())  {
                 res.push_back(String<len>(tmp));
@@ -153,7 +153,7 @@ void SplitString(const std::string &str, std::vector<std::string> &res,
     int size = strlen(str.c_str());
     bool flag_quote = 0; // when visit "
     for (int i = 0; i < size; ++i) {
-        if (str[i] == '\"') flag_quote ^= 1;
+        // if (str[i] == '\"') flag_quote ^= 1;
         if (str[i] == ch && flag_quote == 0) {
             if (!tmp.empty()) {
                 res.push_back(tmp);
