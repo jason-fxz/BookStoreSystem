@@ -73,8 +73,8 @@ struct Book {
     }
 
     friend ostream &operator<<(ostream &os, const Book &obj) {
-        os << obj.ISBN << "\t" << obj.name << "\t" << obj.author << "\t" << obj.keyword <<
-           "\t" << obj.price << "\t" << obj.quantity;
+        os << "ISBN=" << obj.ISBN << ",BookName=\"" << obj.name << "\",Author=\"" << obj.author << "\",Keyword=\"" << obj.keyword
+           << "\",Price=" << std::fixed << std::setprecision(2) << obj.price << ",Quantity=" << obj.quantity;
         return os;
     }
 
@@ -148,8 +148,12 @@ class BookDataBase {
             lISBN.fetchall(ISBN, res);
     }
 
-    void ShowAllBook(std::vector<Book> &res) {
+    void SearchAll(std::vector<Book> &res) {
         lISBN.fetchall("", res);
+    }
+
+    void ShowAllBook() {
+        lISBN.ShowAll();
     }
 
     // 根据 ISBN 选择一本书，如果没有则创建

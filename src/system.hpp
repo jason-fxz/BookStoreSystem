@@ -123,7 +123,7 @@ class BookSystem : private BookDataBase {
         std::vector<Book> res;
         switch (type) {
         case sAll:
-            ShowAllBook(res);
+            SearchAll(res);
             break;
         case sISBN:
             SearchBookByISBN(words, res);
@@ -188,11 +188,7 @@ class BookSystem : private BookDataBase {
 
     void Debug() {
         std::cerr << "All Books:" << std::endl;
-        std::vector<Book> tmp;
-        ShowAllBook(tmp);
-        for (auto &book : tmp) {
-            std::cerr << book << std::endl;
-        }
+        ShowAllBook();
     }
 
 };

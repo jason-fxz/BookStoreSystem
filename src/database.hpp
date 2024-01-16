@@ -309,7 +309,7 @@ class     blocklist {
             for (auto &it : head) {
                 data_file.read(cache1, it.index);
                 for (int i = 0; i < it.count; ++i) {
-                    if (flag )res.push_back(cache1[i].value);
+                    if (flag) res.push_back(cache1[i].value);
                     flag = 1;
                 }
             }

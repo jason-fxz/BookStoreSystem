@@ -120,15 +120,19 @@ void SplitString(const String<len> &str, std::vector<String<len>> &res,
     res.clear();
     std::string tmp;
     int size = strlen(str.c_str());
+    bool flag_quote = 0; // when visit "
     for (int i = 0; i < size; ++i) {
-        if (str[i] == ch) {
-            if (!tmp.empty()) res.push_back(String<len>(tmp));
-            tmp.clear();
+        if (str[i] == '\"') flag_quote ^= 1;
+        if (str[i] == ch && flag_quote == 0) {
+            if (!tmp.empty())  {
+                res.push_back(String<len>(tmp));
+                tmp.clear();
+            }
         } else {
             tmp.push_back(str[i]);
         }
     }
-    if (!tmp.empty()) res.push_back(String<len>(tmp));
+    if (!tmp.empty() && flag_quote == 0) res.push_back(String<len>(tmp));
 }
 
 // Split str by ch, store in res
@@ -137,15 +141,19 @@ void SplitString(const std::string &str, std::vector<std::string> &res,
     res.clear();
     std::string tmp;
     int size = strlen(str.c_str());
+    bool flag_quote = 0; // when visit "
     for (int i = 0; i < size; ++i) {
-        if (str[i] == ch) {
-            if (!tmp.empty()) res.push_back(tmp);
-            tmp.clear();
+        if (str[i] == '\"') flag_quote ^= 1;
+        if (str[i] == ch && flag_quote == 0) {
+            if (!tmp.empty()) {
+                res.push_back(tmp);
+                tmp.clear();
+            }
         } else {
             tmp.push_back(str[i]);
         }
     }
-    if (!tmp.empty()) res.push_back(tmp);
+    if (!tmp.empty() && flag_quote == 0) res.push_back(tmp);
 }
 
 bool isValidUserID(const std::string &str) {
@@ -182,7 +190,7 @@ bool isValidUsername(const std::string &str) {
 
 bool isValidPrivilege(const std::string &str) {
     if (str.size() != 1) return false;
-    if (!(str[0] == '0' || str[0] == '1' || str[0] == '3' || str[0] == '7')) return false;
+    if (!(str[0] == '1' || str[0] == '3' || str[0] == '7')) return false;
     return true;
 }
 
@@ -264,6 +272,7 @@ bool isValidPrice(const std::string &str) {
             else return false;
         }
     }
+    if (countdot > 0 && str.back() == '.') return false;
     return true;
 }
 

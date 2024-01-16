@@ -35,4 +35,4 @@
 /testcases/**
 *.db
 
-/build/**
+/cmake-build-debug/**

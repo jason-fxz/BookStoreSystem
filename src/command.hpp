@@ -32,8 +32,7 @@ class CommandManager {
             if (argv[0] == "show") {
                 if (argv.size() >= 2 && argv[1] == "finance") {
                     return Command_t::show_finance;
-                }
-                else return Command_t::show;
+                } else return Command_t::show;
             }
             if (argv[0] == "report") {
                 if (argv.size() == 2) {
@@ -141,7 +140,8 @@ class CommandManager {
 
     // {1} `show (-ISBN=[ISBN] | -name="[BookName]" | -author="[Author]" | -keyword="[Keyword]")?`
     void cShow() {
-        if (Users.GetCurrentUserPrivilege() < eCustomer) throw CommandError("show: Permission denied"); 
+        if (Users.GetCurrentUserPrivilege() < eCustomer) throw
+            CommandError("show: Permission denied");
         if (argv.size() == 1) {
             Books.Show(sAll, "");
             Logs.log(LogUser() + " show all");
@@ -236,11 +236,10 @@ class CommandManager {
             } else throw CommandError("modify: unknown argument");
         }
         if (flag == 0) throw CommandError("modify: invalid arguments, empty modify");
-        
         Books.Modify(tmp);
         if (!tmp.ISBN.empty()) { // fuckit, 把 ISBN 改了导致用户登陆栈里 select 可能错位
             for (int i = 0; i < Users.selectstack.size(); ++i) {
-            if (Users.selectstack[i] == select) Users.selectstack[i] = tmp.ISBN;
+                if (Users.selectstack[i] == select) Users.selectstack[i] = tmp.ISBN;
             }
         }
         Logs.log(LogUser() + " modify " + std::string(select)
@@ -271,10 +270,12 @@ class CommandManager {
         Books.Select(select);
         Books.Import(std::atoi(argv[1].c_str()));
         Logs.trade(-1.0 * std::atof(argv[2].c_str()));
-        Logs.log(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1] + " TotalCost=" + argv[2]);
+        Logs.log(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1] +
+                 " TotalCost=" + argv[2]);
         Logs.log("trade: - " + std::to_string(Abs(std::atof(argv[2].c_str()))));
         if (Users.GetCurrentUserPrivilege() == eAdmin) {
-            Logs.work(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1] + " TotalCost=" + argv[2]);
+            Logs.work(LogUser() + " import " + std::string(select) + " Quantity=" + argv[1]
+                      + " TotalCost=" + argv[2]);
         }
     }
 
@@ -319,7 +320,8 @@ class CommandManager {
     }
 
     void cDebug() {
-        if (!DEBUG_FLAG) throw CommandError("debug: Permission denied. (You should enable debug mode when start)");
+        if (!DEBUG_FLAG) throw
+            CommandError("debug: Permission denied. (You should enable debug mode when start)");
         std::cerr << "================== DEBUG ==================" << std::endl;
         Users.Debug();
         Books.Debug();
@@ -328,7 +330,7 @@ class CommandManager {
 
   public:
     CommandManager(bool debug = 0) {
-        Logs.log(std::string("start.") + (debug ? " with debug mode": ""));
+        Logs.log(std::string("start.") + (debug ? " with debug mode" : ""));
         DEBUG_FLAG = debug;
         count_line = 0;
     }
@@ -376,7 +378,8 @@ class CommandManager {
                 if (DEBUG_FLAG) std::cerr << "Exit Program" << std::endl;
                 break;
             } catch (const Exception &e) {
-                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  > " << e.what() << std::endl;
+                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  > " <<
+                                              e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;
