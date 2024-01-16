@@ -243,18 +243,18 @@ class CommandManager {
             }
         }
         Logs.log(LogUser() + " modify " + std::string(select)
-                 + ((flag & 1) ? "-ISBN=" + std::string(tmp.ISBN) : "")
-                 + ((flag & 2) ? "-name=\"" + std::string(tmp.name) + "\"" : "")
-                 + ((flag & 4) ? "-author=\"" + std::string(tmp.author) + "\"" : "")
-                 + ((flag & 8) ? "-keyword=\"" + std::string(tmp.keyword) + "\"" : "")
-                 + ((flag & 16) ? "-price=" + std::to_string(tmp.price) : ""));
+                 + ((flag & 1) ? " -ISBN=" + std::string(tmp.ISBN) : "")
+                 + ((flag & 2) ? " -name=\"" + std::string(tmp.name) + "\"" : "")
+                 + ((flag & 4) ? " -author=\"" + std::string(tmp.author) + "\"" : "")
+                 + ((flag & 8) ? " -keyword=\"" + std::string(tmp.keyword) + "\"" : "")
+                 + ((flag & 16) ? " -price=" + std::to_string(tmp.price) : ""));
         if (Users.GetCurrentUserPrivilege() == eAdmin) {
             Logs.work(LogUser() + " modify " + std::string(select)
-                      + ((flag & 1) ? "-ISBN=" + std::string(tmp.ISBN) : "")
-                      + ((flag & 2) ? "-name=\"" + std::string(tmp.name) + "\"" : "")
-                      + ((flag & 4) ? "-author=\"" + std::string(tmp.author) + "\"" : "")
-                      + ((flag & 8) ? "-keyword=\"" + std::string(tmp.keyword) + "\"" : "")
-                      + ((flag & 16) ? "-price=" + std::to_string(tmp.price) : ""));
+                      + ((flag & 1) ? " -ISBN=" + std::string(tmp.ISBN) : "")
+                      + ((flag & 2) ? " -name=\"" + std::string(tmp.name) + "\"" : "")
+                      + ((flag & 4) ? " -author=\"" + std::string(tmp.author) + "\"" : "")
+                      + ((flag & 8) ? " -keyword=\"" + std::string(tmp.keyword) + "\"" : "")
+                      + ((flag & 16) ? " -price=" + std::to_string(tmp.price) : ""));
         }
     }
 
@@ -325,6 +325,10 @@ class CommandManager {
         std::cerr << "================== DEBUG ==================" << std::endl;
         Users.Debug();
         Books.Debug();
+        std::cerr << "\nUser stack:\n" << std::endl;
+        for (int i = 0; i < Users.stack.size(); ++i) {
+            std::cerr << std::string(Users.stack[i].userid) << " " << Users.selectstack[i] << std::endl;
+        }
         std::cerr << "================ END DEBUG ================" << std::endl;
     }
 
@@ -378,7 +382,7 @@ class CommandManager {
                 if (DEBUG_FLAG) std::cerr << "Exit Program" << std::endl;
                 break;
             } catch (const Exception &e) {
-                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  > " <<
+                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  >>> " <<
                                               e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {

@@ -132,7 +132,7 @@ void SplitString(const String<len> &str, std::vector<String<len>> &res,
             tmp.push_back(str[i]);
         }
     }
-    if (!tmp.empty() && flag_quote == 0) res.push_back(String<len>(tmp));
+    if (!tmp.empty()) res.push_back(String<len>(tmp));
 }
 
 // Split str by ch, store in res
@@ -153,7 +153,7 @@ void SplitString(const std::string &str, std::vector<std::string> &res,
             tmp.push_back(str[i]);
         }
     }
-    if (!tmp.empty() && flag_quote == 0) res.push_back(tmp);
+    if (!tmp.empty()) res.push_back(tmp);
 }
 
 bool isValidUserID(const std::string &str) {

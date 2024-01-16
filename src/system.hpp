@@ -187,7 +187,7 @@ class BookSystem : private BookDataBase {
     }
 
     void Debug() {
-        std::cerr << "All Books:" << std::endl;
+        std::cerr << "\nAll Books:\n" << std::endl;
         ShowAllBook();
     }
 

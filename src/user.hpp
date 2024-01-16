@@ -98,7 +98,7 @@ public:
     }
 
     void ShowAllUser() {
-        std::cerr << "All Users:" << std::endl;
+        std::cerr << "\nAll Users:\n" << std::endl;
         lUserID.ShowAll();
     }
 };
