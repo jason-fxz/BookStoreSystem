@@ -485,8 +485,8 @@ class CommandManager {
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
                 std::cerr << count_line << ":Input: " << input << "  >>> " << e.what() << std::endl;
-                exit(-1);
-                break;
+                std::cout << "Invalid\n";
+                // break;
             }
         }
     }
