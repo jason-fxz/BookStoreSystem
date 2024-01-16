@@ -4,12 +4,66 @@
 #define COMMAND_HPP
 
 #include "exception.hpp"
+#include "user.hpp"
 #include "utility.hpp"
 #include "system.hpp"
+#include <functional>
 #include <stdexcept>
 
 
 namespace acm {
+
+std::map<std::string, const char *> reg = {
+    {"UserID", "[\\dA-Za-z_]{1,30}"},
+    {"Password", "[\\dA-Za-z_]{1,30}"},
+    {"Username", "[\\x20-\\x7E]{1,30}"},
+    {"Privilege", "[137]"},
+    {"ISBN", "[\\x21-\\x7E]{1,20}"},
+    {"BookName", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
+    {"Author", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
+    {"Keyword", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
+    {"Quantity", "[1-9][0-9]{0,9}"},
+    {"Price", "(:?[1-9][0-9]{0,9}(:?[.][0-9]{2,2})?|[1-9][0-9]{0,10}(:?[.][0-9]{1,1})?|0(:?[.][0-9]{1,2})?)"},
+    {"Count", "(:?0|[1-9][0-9]{0,9})"}
+};
+
+// 用于匹配命令
+class CommandMatch {
+  private:
+    std::smatch match;
+    std::vector<std::pair<std::regex, std::function<void()>>> cmds;
+    void EraseSpace(std::string &str) { // 去除首尾若干空格
+        int k = 0;
+        while (k < str.size() && str[k] == ' ') ++k;
+        str.erase(0, k);
+    }
+  public:
+    CommandMatch() = default;
+    ~CommandMatch() = default;
+    void AddCommand(const std::string &cmd, std::function<void()> func) {
+        cmds.push_back(make_pair(std::regex(" *" + cmd + " *"), func));
+    }
+    bool Match(const std::string &input, std::vector<std::string> &res,
+               bool UseStrSplit = 1) {
+        for (const auto &it : cmds) {
+            if (std::regex_match(input, match, it.first)) {
+                // res.clear();
+                // if (UseStrSplit) {
+                //     SplitString(input, res);
+                // } else for (int i = 0; i < match.size(); ++i) {
+                //     res.push_back(match[i]);
+                //     EraseSpace(res[i]);
+                //     std::cerr << ">>> " << res[i] << std::endl;
+                // }
+                // it.second();
+                return true;
+            }
+        }
+        return false;
+    }
+
+};
+
 
 class CommandManager {
   private:
@@ -21,6 +75,8 @@ class CommandManager {
     BookSystem Books;
     UserSystem Users;
     LogSystem  Logs;
+
+    CommandMatch cmd_match;
 
     std::string LogUser() {
         return "[" + std::string(Users.GetCurrentUser().userid) + "]";
@@ -129,7 +185,7 @@ class CommandManager {
     }
 
     // {7} `delete [UserID]`
-    void cDel() {
+    void cDelete() {
         if (argv.size() != 2) throw CommandError("delete: invalid arguments");
         if (!isValidUserID(argv[1])) throw CommandError("delete: invalid UserID");
         if (Users.GetCurrentUserPrivilege() < eRoot) throw
@@ -327,7 +383,8 @@ class CommandManager {
         Books.Debug();
         std::cerr << "\nUser stack:\n" << std::endl;
         for (int i = 0; i < Users.stack.size(); ++i) {
-            std::cerr << std::string(Users.stack[i].userid) << " " << Users.selectstack[i] << std::endl;
+            std::cerr << std::string(Users.stack[i].userid) << " " << Users.selectstack[i]
+                      << std::endl;
         }
         std::cerr << "================ END DEBUG ================" << std::endl;
     }
@@ -337,6 +394,36 @@ class CommandManager {
         Logs.log(std::string("start.") + (debug ? " with debug mode" : ""));
         DEBUG_FLAG = debug;
         count_line = 0;
+        cmd_match.AddCommand(format("su +(%s)( +%s)?", reg["UserID"],
+        reg["Password"]), [this]() {cLogin(); });
+        cmd_match.AddCommand(format("quit|exit"), [this]() {cExit();});
+        cmd_match.AddCommand(format("logout"), [this]() {cLogout();});
+        cmd_match.AddCommand(format("register +(%s) +(%s) +(%s)", reg["UserID"],
+        reg["Password"], reg["Username"]), [this]() {cRegist();});
+        cmd_match.AddCommand(format("passwd +(%s)( +%s)? +(%s)", reg["UserID"],
+        reg["Password"], reg["Password"]), [this]() {cPasswd();});
+        cmd_match.AddCommand(format("useradd +(%s) +(%s) +(%s) +(%s)", reg["UserID"],
+        reg["Password"], reg["Privilege"], reg["Username"]), [this]() {cUseradd();});
+        cmd_match.AddCommand(format("delete +(%s)", reg["UserID"]), [this]() {cDelete();});
+        cmd_match.AddCommand(
+            format("show( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\")?",
+        reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"]), [this]() {cShow();});
+        cmd_match.AddCommand(format("buy +(%s) +(%s)", reg["ISBN"],
+        reg["Quantity"]), [this]() {cBuy();});
+        cmd_match.AddCommand(format("select +(%s)", reg["ISBN"]), [this]() {cSelect();});
+        cmd_match.AddCommand(
+            format("modify( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\"| +-price=%s)+",
+                   reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"],
+        reg["Price"]), [this]() {cModify();});
+        cmd_match.AddCommand(format("import +(%s) +(%s)", reg["Quantity"],
+        reg["Price"]), [this]() {cImport();});
+        cmd_match.AddCommand(format("show finance( +(%s))?",
+        reg["Count"]), [this]() {cShowFinance();});
+        cmd_match.AddCommand(format("log"), [this]() {cLog();});
+        cmd_match.AddCommand(format("report +finance"), [this]() {cReportFinance();});
+        cmd_match.AddCommand(format("report +employee"), [this]() {cReportEmployee();});
+        cmd_match.AddCommand(format("debug"), [this]() {cDebug();});
+        cmd_match.AddCommand(format(" *"), []() {});
     }
     ~CommandManager() = default;
 
@@ -349,28 +436,39 @@ class CommandManager {
             throw Exit();
         }
         SplitString(input, argv);
+        if (DEBUG_FLAG) {
+            std::cerr << count_line << ":Input: " << input << ";  >>> ";
+            std::cerr << "{ ";
+            for (int i = 0; i < argv.size(); ++i) {
+                std::cerr << "[" << i << "]=" << argv[i] << ",";
+            }
+            std::cerr << " }" << std::endl;
+        }
         if (argv.size() == 0) return ;
         Command_t cmd = getCommand();
         switch (cmd) {
-        case Command_t::quit:
-        case Command_t::exit: cExit(); break;
-        case Command_t::su: cLogin(); break;
-        case Command_t::logout: cLogout(); break;
-        case Command_t::regist: cRegist(); break;
-        case Command_t::passwd: cPasswd(); break;
-        case Command_t::useradd: cUseradd(); break;
-        case Command_t::del: cDel(); break;
-        case Command_t::show: cShow(); break;
-        case Command_t::buy: cBuy(); break;
-        case Command_t::select: cSelect(); break;
-        case Command_t::modify: cModify(); break;
-        case Command_t::import: cImport(); break;
-        case Command_t::show_finance: cShowFinance(); break;
-        case Command_t::log: cLog(); break;
-        case Command_t::report_finance: cReportFinance(); break;
-        case Command_t::report_employee: cReportEmployee(); break;
-        case Command_t::debug: cDebug(); break;
-        case Command_t::Undefined: throw CommandError("Unknown command");
+            case Command_t::quit:
+            case Command_t::exit: cExit(); break;
+            case Command_t::su: cLogin(); break;
+            case Command_t::logout: cLogout(); break;
+            case Command_t::regist: cRegist(); break;
+            case Command_t::passwd: cPasswd(); break;
+            case Command_t::useradd: cUseradd(); break;
+            case Command_t::del: cDelete(); break;
+            case Command_t::show: cShow(); break;
+            case Command_t::buy: cBuy(); break;
+            case Command_t::select: cSelect(); break;
+            case Command_t::modify: cModify(); break;
+            case Command_t::import: cImport(); break;
+            case Command_t::show_finance: cShowFinance(); break;
+            case Command_t::log: cLog(); break;
+            case Command_t::report_finance: cReportFinance(); break;
+            case Command_t::report_employee: cReportEmployee(); break;
+            case Command_t::debug: cDebug(); break;
+            case Command_t::Undefined: throw CommandError("Unknown command");
+        }
+        if (!cmd_match.Match(input, argv)) {
+            throw std::runtime_error("Invalid command");
         }
     }
 
@@ -386,7 +484,8 @@ class CommandManager {
                                               e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
-                std::cerr << e.what() << std::endl;
+                std::cerr << count_line << ":Input: " << input << "  >>> " << e.what() << std::endl;
+                exit(-1);
                 break;
             }
         }

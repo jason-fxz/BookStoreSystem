@@ -10,6 +10,7 @@
 #include <iostream>
 #include <regex>
 #include <map>
+#include <stdarg.h>
 #include "string.hpp"
 #include "exception.hpp"
 
@@ -33,6 +34,15 @@ int Camp(const char *x, const char *y) {
 template <class T>
 T Abs(const T &x) {
     return (x > 0) ? x : -x;
+}
+
+std::string format(const char *format, ...) {
+    char buffer[256];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
+    return std::string(buffer);
 }
 
 // Books
