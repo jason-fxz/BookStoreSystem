@@ -16,12 +16,12 @@ namespace acm {
 std::map<std::string, const char *> reg = {
     {"UserID", "[\\dA-Za-z_]{1,30}"},
     {"Password", "[\\dA-Za-z_]{1,30}"},
-    {"Username", "[\\x20-\\x7E]{1,30}"},
+    {"Username", "[\\x21-\\x7E]{1,30}"},
     {"Privilege", "[137]"},
     {"ISBN", "[\\x21-\\x7E]{1,20}"},
-    {"BookName", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
-    {"Author", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
-    {"Keyword", "[\\x20-\\x21\\x23-\\x7E]{1,60}"},
+    {"BookName", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
+    {"Author", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
+    {"Keyword", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
     {"Quantity", "[1-9][0-9]{0,9}"},
     {"Price", "(:?[1-9][0-9]{0,9}(:?[.][0-9]{2,2})?|[1-9][0-9]{0,10}(:?[.][0-9]{1,1})?|0(:?[.][0-9]{1,2})?)"},
     {"Count", "(:?0|[1-9][0-9]{0,9})"}
@@ -484,7 +484,7 @@ class CommandManager {
                                               e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
-                std::cerr << count_line << ":Input: " << input << "  >>> " << e.what() << std::endl;
+                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  >>> " << e.what() << std::endl;
                 std::cout << "Invalid\n";
                 // break;
             }
