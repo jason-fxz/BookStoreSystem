@@ -435,6 +435,9 @@ class CommandManager {
             Logs.log("exit success");
             throw Exit();
         }
+        if (!cmd_match.Match(input, argv)) {
+            throw std::runtime_error("Invalid command");
+        }
         SplitString(input, argv);
         if (DEBUG_FLAG) {
             std::cerr << count_line << ":Input: " << input << ";  >>> ";
@@ -466,9 +469,6 @@ class CommandManager {
             case Command_t::report_employee: cReportEmployee(); break;
             case Command_t::debug: cDebug(); break;
             case Command_t::Undefined: throw CommandError("Unknown command");
-        }
-        if (!cmd_match.Match(input, argv)) {
-            throw std::runtime_error("Invalid command");
         }
     }
 
