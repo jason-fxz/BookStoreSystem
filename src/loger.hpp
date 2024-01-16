@@ -18,6 +18,8 @@ class Loger : public File {
 
   public:
     void flush() {
+        file.clear();
+        file.seekp(0, std::ios::end);
         file.write(buffer.c_str(), buffer.size());
         buffer.clear();
     }
@@ -53,6 +55,8 @@ class Loger : public File {
         else {
             open();
             file.seekp(0, std::ios::end);
+            file.seekg(0, std::ios::end);
+            file.clear();
         }
     }
     ~Loger() {

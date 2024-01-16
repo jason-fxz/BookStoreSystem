@@ -55,8 +55,7 @@ class UserSystem : private UserDataBase {
         if (password.empty()) {
             if (GetCurrentUserPrivilege() <= tmpuser.privilege) throw
                 UserSystemError("Login: you should enter password");
-        }
-        if (tmpuser.password != password) {
+        } else if (tmpuser.password != password) {
             throw UserSystemError("Login: wrong password");
         }
         Push(tmpuser);
@@ -207,7 +206,7 @@ class LogSystem {
   public:
     LogSystem() : workInfo("./work.log"), logInfo("./log.log"),
         tradeInfo("./trade.log") {}
-    ~LogSystem() {}
+    ~LogSystem() = default;
 
     void log(const std::string &str, const char &end = '\n') {
         logInfo.write(str + end);
@@ -259,9 +258,8 @@ class LogSystem {
         if (income == 0 && outcome == 0) {
             std::cout << "\n";
         } else {
-            std::cout << "+ " << income << " - " << outcome << "\n";
+            std::cout << "+ " << std::fixed << std::setprecision(2) << income << " - " << std::fixed << std::setprecision(2) << outcome << "\n";
         }
-        tradeInfo.file.clear();
     }
 };
 

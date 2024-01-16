@@ -167,8 +167,8 @@ class BookDataBase {
     void ModifyBook(const Book &obj) {
         if (cur.empty()) throw std::runtime_error("No selected book");
         if (obj.ISBN != cur) {
-            lISBN.remove(cur, cache);
-            lISBN.insert(obj.ISBN, obj);
+            lISBN.removekey(cur);
+            if (!lISBN.insertkey(obj.ISBN, obj)) throw BookSystemError("ModifyBook: ISBN already exists");
         } else lISBN.modify(cur, obj);
         if (Camp(obj.name, cache.name) != 0) {
             lBookName.remove(cache.name, obj.ISBN);

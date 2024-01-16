@@ -16,6 +16,7 @@ class CommandManager {
     std::string input;
     std::vector<std::string> argv;
     int count_line = 0;
+    bool DEBUG_FLAG = false;
 
     BookSystem Books;
     UserSystem Users;
@@ -140,7 +141,7 @@ class CommandManager {
 
     // {1} `show (-ISBN=[ISBN] | -name="[BookName]" | -author="[Author]" | -keyword="[Keyword]")?`
     void cShow() {
-        if (argv.size() > 2) throw CommandError("show: invalid arguments");
+        if (Users.GetCurrentUserPrivilege() < eCustomer) throw CommandError("show: Permission denied"); 
         if (argv.size() == 1) {
             Books.Show(sAll, "");
             Logs.log(LogUser() + " show all");
@@ -167,7 +168,7 @@ class CommandManager {
                     Logs.log(LogUser() + " show keyword=\"" + tmp + "\"");
                 } else throw CommandError("show: invalid Keyword");
             } else throw CommandError("show: invalid arguments");
-        }
+        } else throw CommandError("show: invalid arguments");
     }
 
     // {1} `buy [ISBN] [Quantity]`
@@ -235,9 +236,13 @@ class CommandManager {
             } else throw CommandError("modify: unknown argument");
         }
         if (flag == 0) throw CommandError("modify: invalid arguments, empty modify");
-        // std::cerr << " Modifya fuck: " << tmp << std::endl;
-        if (!tmp.ISBN.empty()) Users.selectstack[Users.selectstack.size() - 1] = tmp.ISBN;
+        
         Books.Modify(tmp);
+        if (!tmp.ISBN.empty()) { // fuckit, 把 ISBN 改了导致用户登陆栈里 select 可能错位
+            for (int i = 0; i < Users.selectstack.size(); ++i) {
+            if (Users.selectstack[i] == select) Users.selectstack[i] = tmp.ISBN;
+            }
+        }
         Logs.log(LogUser() + " modify " + std::string(select)
                  + ((flag & 1) ? "-ISBN=" + std::string(tmp.ISBN) : "")
                  + ((flag & 2) ? "-name=\"" + std::string(tmp.name) + "\"" : "")
@@ -281,9 +286,11 @@ class CommandManager {
             CommandError("show finance: Permission denied");
         if (argv.size() == 2) {
             Logs.showFinance();
+            Logs.log(LogUser() + " show finance");
         } else if (argv.size() == 3) {
             if (!isValidCount(argv[2])) throw CommandError("show finance: invalid Count");
             Logs.showFinance(std::atoi(argv[2].c_str()));
+            Logs.log(LogUser() + " show finance " + argv[2]);
         }
     }
 
@@ -312,6 +319,7 @@ class CommandManager {
     }
 
     void cDebug() {
+        if (!DEBUG_FLAG) throw CommandError("debug: Permission denied. (You should enable debug mode when start)");
         std::cerr << "================== DEBUG ==================" << std::endl;
         Users.Debug();
         Books.Debug();
@@ -319,8 +327,9 @@ class CommandManager {
     }
 
   public:
-    CommandManager() {
-        Logs.log("start.");
+    CommandManager(bool debug = 0) {
+        Logs.log(std::string("start.") + (debug ? " with debug mode": ""));
+        DEBUG_FLAG = debug;
         count_line = 0;
     }
     ~CommandManager() = default;
@@ -329,9 +338,12 @@ class CommandManager {
         std::getline(std::cin, input);
         ++count_line;
         if (std::cin.eof()) {
-            cExit(); return ;
+            while (!Users.stack.empty()) Users.Logout();
+            Logs.log("exit success");
+            throw Exit();
         }
         SplitString(input, argv);
+        if (argv.size() == 0) return ;
         Command_t cmd = getCommand();
         switch (cmd) {
         case Command_t::quit:
@@ -361,10 +373,10 @@ class CommandManager {
             try {
                 NextCommand();
             } catch (const Exit &e) {
-                std::cerr << "Exit Program" << std::endl;
+                if (DEBUG_FLAG) std::cerr << "Exit Program" << std::endl;
                 break;
             } catch (const Exception &e) {
-                std::cerr << count_line << ":Input: " << input << "  > " << e.what() << std::endl;
+                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  > " << e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;
