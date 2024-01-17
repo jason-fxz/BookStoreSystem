@@ -2,6 +2,14 @@
 
 SJTU ACM 班 2023 级程序设计课程大作业
 
+## TODO
+
+- [x] 前置作业 见 `./prework/`
+- [x] 通过公开测试点
+- [ ] 通过非公开测试点
+- [ ] Web 前端
+- [ ] 用户文档
+
 ## 作业要求
 
 见 [HW_requirement](./docs/HW_requirement/)
@@ -14,3 +22,4 @@ SJTU ACM 班 2023 级程序设计课程大作业
 
 ## 用户文档
 
+🚧
