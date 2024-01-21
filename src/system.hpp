@@ -9,6 +9,7 @@
 #include "user.hpp"
 #include "loger.hpp"
 #include <ios>
+#include <sstream>
 #include <vector>
 
 namespace acm {
@@ -110,6 +111,53 @@ class UserSystem : private UserDataBase {
 
 };
 
+class UserSystemWeb : private UserDataBase {
+  public:
+    ~UserSystemWeb() = default;
+    UserSystemWeb() = default;
+
+    // 登录帐户
+    void Login(const UserID_t &userid, const Password_t &password, User &res) {
+        User tmpuser;
+        GetUser(userid, tmpuser);
+        if (tmpuser.password != password) {
+            throw UserSystemError("Login: wrong password");
+        }
+        res = tmpuser;
+    }
+
+
+    // 注册帐户
+    void Register(const UserID_t &userid, const Password_t &password,
+                  const UserName_t &username) {
+        AddUser(User(userid, password, username, eCustomer));
+    }
+
+    // 修改密码
+    void ChangePassword(const UserID_t &userid, const Password_t &password_new,
+                        const Password_t &password_cur, const Privilege_t &my_level) {
+        User tmpuser; GetUser(userid, tmpuser);
+        if (my_level > tmpuser.privilege) {
+            tmpuser.password = password_new;
+        } else {
+            if (password_cur != tmpuser.password) throw UserSystemError("wrong current password");
+            tmpuser.password = password_new;
+        }
+        ModifyUser(tmpuser);
+    }
+
+    // 创建帐户
+    void UserAdd(const UserID_t &userid, const Password_t &password,
+                 const Privilege_t &privilege, const UserName_t &username) {
+        AddUser(User(userid, username, password, privilege));
+    }
+
+    // 删除帐户
+    void UserDelete(const UserID_t &userid) {
+        DeleteUser(userid);
+    }
+};
+
 
 class BookSystem : private BookDataBase {
 
@@ -193,6 +241,72 @@ class BookSystem : private BookDataBase {
 
 };
 
+class BookSystemWeb : private BookDataBase {
+
+  public:
+    BookSystemWeb() = default;
+    ~BookSystemWeb() = default;
+
+    // 输出满足要求的书籍
+    template <class words_t>
+    void Show(const Search_t &type, const words_t &words, std::vector<Book> &res) {
+        switch (type) {
+        case sAll:
+            SearchAll(res);
+            break;
+        case sISBN:
+            SearchBookByISBN(words, res);
+            break;
+        case sName:
+            SearchBookByName(words, res);
+            break;
+        case sAuthor:
+            SearchBookByAuthor(words, res);
+            break;
+        case sKeyword:
+            SearchBookByKeyword(words, res);
+            break;
+        default:
+            throw BookSystemError("Show: Invalid SearchType");
+        }
+    }
+
+    // 购买图书
+    void Buy(const ISBN_t &ISBN, const size_t &quantity, double &totcost) {
+        std::vector<Book> tmp;
+        SearchBookByISBN(ISBN, tmp);
+        if (tmp.empty()) throw BookSystemError("Buy: No such books");
+        if (tmp[0].quantity < quantity) throw BookSystemError("Buy: No enough books");
+        totcost = tmp[0].price * quantity;
+        tmp[0].quantity -= quantity;
+        SelectByISBN(tmp[0].ISBN);
+        ModifyBook(tmp[0]);
+    }
+
+    // 根据 ISBN 选择一本书，如果没有则创建
+    void Select(const ISBN_t &ISBN, Book &res) {
+        SelectByISBN(ISBN);
+        GetCache(res);
+    }
+
+
+    // 修改图书信息
+    void Modify(const ISBN_t &oldISBN, const Book &obj) {
+        SelectByISBN(oldISBN);
+        ModifyBook(obj);
+    }
+
+    // 图书进货
+    void Import(const ISBN_t &oldISBN, const size_t &quantity) {
+        Book tmp;
+        SelectByISBN(oldISBN);
+        GetCache(tmp);
+        tmp.quantity += quantity;
+        ModifyBook(tmp);
+    }
+
+};
+
 class LogSystem {
   private:
     Loger logInfo;    // 记录日志
@@ -257,6 +371,50 @@ class LogSystem {
             std::cout << "+ " << std::fixed << std::setprecision(2) << income << " - " << std::fixed << std::setprecision(2) << outcome << "\n";
         }
     }
+};
+
+class LogSystemWeb {
+  private:
+    Loger logInfo;    // 记录日志
+    Loger workInfo;   // 记录员工
+    Loger tradeInfo;  // 记录收支
+    char tmpstr[256];
+  public:
+    LogSystemWeb() : workInfo("./work.log"), logInfo("./log.log"),
+        tradeInfo("./trade.log") {}
+    ~LogSystemWeb() = default;
+
+    void log(const std::string &str, const char &end = '\n') {
+        logInfo.write(str + end);
+    }
+
+    void trade(const double &money) {
+        sprintf(tmpstr, "%c %13.2lf\n", money >= 0 ? '+' : '-', Abs(money));
+        tradeInfo.write(tmpstr);
+    }
+
+    void work(const std::string &str, const char &end = '\n') {
+        workInfo.write(str + end);
+    }
+
+    void showLog(std::string &res) {
+        std::ostringstream oss;
+        logInfo.printAll(oss);
+        res = oss.str();
+    }
+
+    void showWork(std::string &res) {
+        std::ostringstream oss;
+        workInfo.printAll(oss);
+        res = oss.str();
+    }
+
+    void showTrade(std::string &res) {
+        std::ostringstream oss;
+        tradeInfo.printAll(oss);
+        res = oss.str();
+    }
+
 };
 
 }

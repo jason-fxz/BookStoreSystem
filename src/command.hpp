@@ -91,6 +91,8 @@ class CommandManager {
                     return Command_t::show_finance;
                 } else return Command_t::show;
             }
+            return it->second;
+        } else {
             if (argv[0] == "report") {
                 if (argv.size() == 2) {
                     if (argv[1] == "finance") return Command_t::report_finance;
@@ -98,8 +100,6 @@ class CommandManager {
                     else return Command_t::Undefined;
                 }
             }
-            return it->second;
-        } else {
             return Command_t::Undefined;
         }
     }

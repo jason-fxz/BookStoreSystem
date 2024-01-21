@@ -37,7 +37,7 @@ T Abs(const T &x) {
 }
 
 std::string format(const char *format, ...) {
-    char buffer[256];
+    char buffer[1024];
     va_list args;
     va_start(args, format);
     vsprintf(buffer, format, args);

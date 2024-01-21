@@ -5,6 +5,7 @@
 
 #include "fileio.hpp"
 #include "utility.hpp"
+#include <ostream>
 #include <string>
 #include <iostream>
 
@@ -12,6 +13,7 @@ namespace acm {
 
 class Loger : public File {
     friend class LogSystem;
+    friend class LogSystemWeb;
   private:
     static const int MAX_BUFFER_SIZE = 4096;
     std::string buffer;
@@ -39,14 +41,14 @@ class Loger : public File {
         if (buffer.size() > MAX_BUFFER_SIZE) flush();
     }
 
-    void printAll() {
+    void printAll(std::ostream &os = std::cout) {
         flush();
         file.seekg(0, std::ios::beg);
         std::string line;
         while (std::getline(file, line)) {
-            std::cout << line << "\n";
+            os << line << "\n";
         }
-        std::cout << std::endl;
+        os << std::endl;
         file.clear();
     }
 

@@ -55,6 +55,18 @@ class LogSystemError : public Exception {
     LogSystemError(const std::string &msg) : Exception("LogSystemError: " + msg) {}
 };
 
+// 用于服务器拒绝访问
+class AuthorizationError : public Exception {
+  public:
+    AuthorizationError(const std::string &msg) : Exception("AuthorizationError: " + msg) {}
+};
+
+// 用于服务器 API 访问参数错误
+class APIError : public Exception {
+  public:
+    APIError(const std::string &msg) : Exception("APIError: " + msg) {}
+};
+
 // Just for exit the program
 class Exit : public Exception {
   public:
