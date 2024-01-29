@@ -246,12 +246,12 @@ bool isValidKeyword(const std::string &str, const int &flag = 1) {
         }
         if (flag == 2 && str[i] == '|') return false;
     }
+    if (str[0] == '|' || str.back() == '|') return false;
     if (flag == 1) {
         std::vector<std::string> res;
         SplitString(str, res, '|');
         std::sort(res.begin(), res.end());
         for (int i = 1; i < res.size(); ++i) {
-            
             if (res[i] == res[i - 1]) return false;
         }
     }
