@@ -438,9 +438,9 @@ class CommandManager {
             Logs.log("exit success");
             throw Exit();
         }
-        if (!cmd_match.Match(input, argv)) {
-            throw std::runtime_error("Invalid command");
-        }
+        // if (!cmd_match.Match(input, argv)) {
+        //     throw std::runtime_error("Invalid command");
+        // }
         SplitString(input, argv);
         if (DEBUG_FLAG) {
             std::cerr << count_line << ":Input: " << input << ";  >>> ";

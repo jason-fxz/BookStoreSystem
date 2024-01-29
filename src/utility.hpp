@@ -191,7 +191,7 @@ bool isValidPassword(const std::string &str) {
 bool isValidUsername(const std::string &str) {
     if (str.empty() || str.size() > 30) return false;
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] < 32 || str[i] > 126) {
+        if (str[i] < 33 || str[i] > 126) {
             return false;
         }
     }
@@ -207,7 +207,7 @@ bool isValidPrivilege(const std::string &str) {
 bool isValidISBN(const std::string &str) {
     if (str.empty() || str.size() > 20) return false;
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] < 32 || str[i] > 126) {
+        if (str[i] < 33 || str[i] > 126) {
             return false;
         }
     }
@@ -217,7 +217,7 @@ bool isValidISBN(const std::string &str) {
 bool isValidBookName(const std::string &str) {
     if (str.empty() || str.size() > 60) return false;
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] < 32 || str[i] > 126 || str[i] == '\"') {
+        if (str[i] < 33 || str[i] > 126 || str[i] == '\"') {
             return false;
         }
     }
@@ -227,7 +227,7 @@ bool isValidBookName(const std::string &str) {
 bool isValidAuthor(const std::string &str) {
     if (str.empty() || str.size() > 60) return false;
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] < 32 || str[i] > 126 || str[i] == '\"') {
+        if (str[i] < 33 || str[i] > 126 || str[i] == '\"') {
             return false;
         }
     }
@@ -238,7 +238,7 @@ bool isValidAuthor(const std::string &str) {
 bool isValidKeyword(const std::string &str, const int &flag = 1) {
     if (str.empty() || str.size() > 60) return false;
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] < 32 || str[i] > 126 || str[i] == '\"') {
+        if (str[i] < 33 || str[i] > 126 || str[i] == '\"') {
             return false;
         }
         if (i != 0 && str[i] == str[i - 1] && str[i] == '|') {
