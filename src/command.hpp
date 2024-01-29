@@ -349,6 +349,7 @@ class CommandManager {
             Logs.log(LogUser() + " show finance");
         } else if (argv.size() == 3) {
             if (!isValidCount(argv[2])) throw CommandError("show finance: invalid Count");
+            if (std::stoi(argv[2]) > 2147483647ll) throw CommandError("show finance: invalid Count (too large)");
             Logs.showFinance(std::stoi(argv[2]));
             Logs.log(LogUser() + " show finance " + argv[2]);
         }
@@ -431,13 +432,14 @@ class CommandManager {
     ~CommandManager() = default;
 
     void NextCommand() {
-        std::getline(std::cin, input);
-        ++count_line;
         if (std::cin.eof()) {
             while (!Users.stack.empty()) Users.Logout();
             Logs.log("exit success");
             throw Exit();
         }
+        std::getline(std::cin, input);
+        ++count_line;
+        
         // if (!cmd_match.Match(input, argv)) {
         //     throw std::runtime_error("Invalid command");
         // }
@@ -473,6 +475,7 @@ class CommandManager {
             case Command_t::debug: cDebug(); break;
             case Command_t::Undefined: throw CommandError("Unknown command");
         }
+        
     }
 
     void Run() {
