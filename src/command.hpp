@@ -349,7 +349,7 @@ class CommandManager {
             Logs.log(LogUser() + " show finance");
         } else if (argv.size() == 3) {
             if (!isValidCount(argv[2])) throw CommandError("show finance: invalid Count");
-            Logs.showFinance(std::stoi(argv[2]));
+            Logs.showFinance(std::stoll(argv[2]));
             Logs.log(LogUser() + " show finance " + argv[2]);
         }
     }

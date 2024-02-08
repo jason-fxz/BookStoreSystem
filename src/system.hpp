@@ -348,7 +348,7 @@ class LogSystem {
         tradeInfo.printAll();
     }
 
-    void showFinance(const int &count = -1) {
+    void showFinance(const long long &count = -1) {
         tradeInfo.flush();
         if (count == -1) { // show all
             tradeInfo.file.seekg(0, std::ios::beg);

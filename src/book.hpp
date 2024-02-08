@@ -18,8 +18,8 @@ struct Book {
     Keyword_t  keyword;
 
     double     price;
-    size_t        quantity;
-
+    unsigned long long  quantity;
+    
     Book() : ISBN(), name(), author(), keyword(), price(0), quantity(0) {}
 
     Book(const ISBN_t &_ISBN) :
