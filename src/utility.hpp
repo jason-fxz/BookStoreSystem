@@ -266,6 +266,7 @@ bool isValidQuantity(const std::string &str) {
             return false;
         }
     }
+    if (std::stoll(str) > 2147483647ll) return false; 
     return true;
 }
 
@@ -294,6 +295,7 @@ bool isValidCount(const std::string &str) {
             return false;
         }
     }
+    if (std::stoll(str) > 2147483647ll) return false;
     return true;
 }
 

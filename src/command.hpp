@@ -14,19 +14,19 @@
 
 namespace acm {
 
-std::map<std::string, const char *> reg = {
-    {"UserID", "[\\dA-Za-z_]{1,30}"},
-    {"Password", "[\\dA-Za-z_]{1,30}"},
-    {"Username", "[\\x21-\\x7E]{1,30}"},
-    {"Privilege", "[137]"},
-    {"ISBN", "[\\x21-\\x7E]{1,20}"},
-    {"BookName", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
-    {"Author", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
-    {"Keyword", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
-    {"Quantity", "[1-9][0-9]{0,9}"},
-    {"Price", "(:?[1-9][0-9]{0,9}(:?[.][0-9]{2,2})?|[1-9][0-9]{0,10}(:?[.][0-9]{1,1})?|0(:?[.][0-9]{1,2})?)"},
-    {"Count", "(:?0|[1-9][0-9]{0,9})"}
-};
+// std::map<std::string, const char *> reg = {
+//     {"UserID", "[\\dA-Za-z_]{1,30}"},
+//     {"Password", "[\\dA-Za-z_]{1,30}"},
+//     {"Username", "[\\x21-\\x7E]{1,30}"},
+//     {"Privilege", "[137]"},
+//     {"ISBN", "[\\x21-\\x7E]{1,20}"},
+//     {"BookName", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
+//     {"Author", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
+//     {"Keyword", "[\\x21-\\x21\\x23-\\x7E]{1,60}"},
+//     {"Quantity", "[1-9][0-9]{0,9}"},
+//     {"Price", "(:?[1-9][0-9]{0,9}(:?[.][0-9]{2,2})?|[1-9][0-9]{0,10}(:?[.][0-9]{1,1})?|0(:?[.][0-9]{1,2})?)"},
+//     {"Count", "(:?0|[1-9][0-9]{0,9})"}
+// };
 
 // 用于匹配命令
 class CommandMatch {
@@ -77,7 +77,7 @@ class CommandManager {
     UserSystem Users;
     LogSystem  Logs;
 
-    CommandMatch cmd_match;
+    // CommandMatch cmd_match;
 
     std::string LogUser() {
         return "[" + std::string(Users.GetCurrentUser().userid) + "]";
@@ -233,7 +233,7 @@ class CommandManager {
         if (argv.size() != 3) throw CommandError("buy: invalid arguments");
         if (!isValidISBN(argv[1])) throw CommandError("buy: invalid ISBN");
         if (!isValidQuantity(argv[2])) throw CommandError("buy: invalid Quantity");
-        if (std::stoll(argv[2]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
+        // if (std::stoll(argv[2]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
         if (Users.GetCurrentUserPrivilege() < eCustomer) throw
             CommandError("buy: Permission denied");
         double cost = Books.Buy(argv[1], std::stoul(argv[2]));
@@ -320,7 +320,7 @@ class CommandManager {
     void cImport() {
         if (argv.size() != 3) throw CommandError("import: invalid arguments");
         if (!isValidQuantity(argv[1])) throw CommandError("import: invalid Quantity");
-        if (std::stoll(argv[1]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
+        // if (std::stoll(argv[1]) > 2147483647ll) throw CommandError("import: invalid Quantity (too large)");
         if (!isValidPrice(argv[2])) throw CommandError("import: invalid TotalCost");
         if (Users.GetCurrentUserPrivilege() < eAdmin) throw
             CommandError("import: Permission denied");
@@ -349,7 +349,6 @@ class CommandManager {
             Logs.log(LogUser() + " show finance");
         } else if (argv.size() == 3) {
             if (!isValidCount(argv[2])) throw CommandError("show finance: invalid Count");
-            if (std::stoi(argv[2]) > 2147483647ll) throw CommandError("show finance: invalid Count (too large)");
             Logs.showFinance(std::stoi(argv[2]));
             Logs.log(LogUser() + " show finance " + argv[2]);
         }
@@ -398,36 +397,36 @@ class CommandManager {
         Logs.log(std::string("start.") + (debug ? " with debug mode" : ""));
         DEBUG_FLAG = debug;
         count_line = 0;
-        cmd_match.AddCommand(format("su +(%s)( +%s)?", reg["UserID"],
-        reg["Password"]), [this]() {cLogin(); });
-        cmd_match.AddCommand(format("quit|exit"), [this]() {cExit();});
-        cmd_match.AddCommand(format("logout"), [this]() {cLogout();});
-        cmd_match.AddCommand(format("register +(%s) +(%s) +(%s)", reg["UserID"],
-        reg["Password"], reg["Username"]), [this]() {cRegist();});
-        cmd_match.AddCommand(format("passwd +(%s)( +%s)? +(%s)", reg["UserID"],
-        reg["Password"], reg["Password"]), [this]() {cPasswd();});
-        cmd_match.AddCommand(format("useradd +(%s) +(%s) +(%s) +(%s)", reg["UserID"],
-        reg["Password"], reg["Privilege"], reg["Username"]), [this]() {cUseradd();});
-        cmd_match.AddCommand(format("delete +(%s)", reg["UserID"]), [this]() {cDelete();});
-        cmd_match.AddCommand(
-            format("show( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\")?",
-        reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"]), [this]() {cShow();});
-        cmd_match.AddCommand(format("buy +(%s) +(%s)", reg["ISBN"],
-        reg["Quantity"]), [this]() {cBuy();});
-        cmd_match.AddCommand(format("select +(%s)", reg["ISBN"]), [this]() {cSelect();});
-        cmd_match.AddCommand(
-            format("modify( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\"| +-price=%s)+",
-                   reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"],
-        reg["Price"]), [this]() {cModify();});
-        cmd_match.AddCommand(format("import +(%s) +(%s)", reg["Quantity"],
-        reg["Price"]), [this]() {cImport();});
-        cmd_match.AddCommand(format("show finance( +(%s))?",
-        reg["Count"]), [this]() {cShowFinance();});
-        cmd_match.AddCommand(format("log"), [this]() {cLog();});
-        cmd_match.AddCommand(format("report +finance"), [this]() {cReportFinance();});
-        cmd_match.AddCommand(format("report +employee"), [this]() {cReportEmployee();});
-        cmd_match.AddCommand(format("debug"), [this]() {cDebug();});
-        cmd_match.AddCommand(format(" *"), []() {});
+        // cmd_match.AddCommand(format("su +(%s)( +%s)?", reg["UserID"],
+        // reg["Password"]), [this]() {cLogin(); });
+        // cmd_match.AddCommand(format("quit|exit"), [this]() {cExit();});
+        // cmd_match.AddCommand(format("logout"), [this]() {cLogout();});
+        // cmd_match.AddCommand(format("register +(%s) +(%s) +(%s)", reg["UserID"],
+        // reg["Password"], reg["Username"]), [this]() {cRegist();});
+        // cmd_match.AddCommand(format("passwd +(%s)( +%s)? +(%s)", reg["UserID"],
+        // reg["Password"], reg["Password"]), [this]() {cPasswd();});
+        // cmd_match.AddCommand(format("useradd +(%s) +(%s) +(%s) +(%s)", reg["UserID"],
+        // reg["Password"], reg["Privilege"], reg["Username"]), [this]() {cUseradd();});
+        // cmd_match.AddCommand(format("delete +(%s)", reg["UserID"]), [this]() {cDelete();});
+        // cmd_match.AddCommand(
+        //     format("show( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\")?",
+        // reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"]), [this]() {cShow();});
+        // cmd_match.AddCommand(format("buy +(%s) +(%s)", reg["ISBN"],
+        // reg["Quantity"]), [this]() {cBuy();});
+        // cmd_match.AddCommand(format("select +(%s)", reg["ISBN"]), [this]() {cSelect();});
+        // cmd_match.AddCommand(
+        //     format("modify( +-ISBN=%s| +-name=\"%s\"| +-author=\"%s\"| +-keyword=\"%s\"| +-price=%s)+",
+        //            reg["ISBN"], reg["BookName"], reg["Author"], reg["Keyword"],
+        // reg["Price"]), [this]() {cModify();});
+        // cmd_match.AddCommand(format("import +(%s) +(%s)", reg["Quantity"],
+        // reg["Price"]), [this]() {cImport();});
+        // cmd_match.AddCommand(format("show finance( +(%s))?",
+        // reg["Count"]), [this]() {cShowFinance();});
+        // cmd_match.AddCommand(format("log"), [this]() {cLog();});
+        // cmd_match.AddCommand(format("report +finance"), [this]() {cReportFinance();});
+        // cmd_match.AddCommand(format("report +employee"), [this]() {cReportEmployee();});
+        // cmd_match.AddCommand(format("debug"), [this]() {cDebug();});
+        // cmd_match.AddCommand(format(" *"), []() {});
     }
     ~CommandManager() = default;
 
