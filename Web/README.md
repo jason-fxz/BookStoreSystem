@@ -12,7 +12,7 @@
 ## frontend
 
 ```sh
-cd fronted
+cd frontend
 ```
 
 ### Project Setup

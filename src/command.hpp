@@ -154,6 +154,7 @@ class CommandManager {
         if (!isValidUserID(argv[1])) throw CommandError("passwd: invalid UserID");
         if (argv.size() == 4
             && !isValidPassword(argv[3])) throw CommandError("passwd: invalid Password");
+        if (!isValidPassword(argv[2])) throw CommandError("passwd: invalid Password");
         if (Users.GetCurrentUserPrivilege() < eCustomer) throw
             CommandError("passwd: Permission denied");
         if (argv.size() == 3) {
@@ -326,6 +327,8 @@ class CommandManager {
             CommandError("import: Permission denied");
         ISBN_t select = Users.selectstack[Users.selectstack.size() - 1];
         if (select.empty()) throw CommandError("modify: No book selected");
+        if (std::stod(argv[2]) == 0) throw
+            CommandError("modify: TotalCost can't be zero");
         Books.Select(select);
         Books.Import(std::stoul(argv[1]));
         Logs.trade(-1.0 * std::stod(argv[2]));
@@ -438,7 +441,6 @@ class CommandManager {
         }
         std::getline(std::cin, input);
         ++count_line;
-        
         // if (!cmd_match.Match(input, argv)) {
         //     throw std::runtime_error("Invalid command");
         // }
@@ -454,27 +456,26 @@ class CommandManager {
         if (argv.size() == 0) return ;
         Command_t cmd = getCommand();
         switch (cmd) {
-            case Command_t::quit:
-            case Command_t::exit: cExit(); break;
-            case Command_t::su: cLogin(); break;
-            case Command_t::logout: cLogout(); break;
-            case Command_t::regist: cRegist(); break;
-            case Command_t::passwd: cPasswd(); break;
-            case Command_t::useradd: cUseradd(); break;
-            case Command_t::del: cDelete(); break;
-            case Command_t::show: cShow(); break;
-            case Command_t::buy: cBuy(); break;
-            case Command_t::select: cSelect(); break;
-            case Command_t::modify: cModify(); break;
-            case Command_t::import: cImport(); break;
-            case Command_t::show_finance: cShowFinance(); break;
-            case Command_t::log: cLog(); break;
-            case Command_t::report_finance: cReportFinance(); break;
-            case Command_t::report_employee: cReportEmployee(); break;
-            case Command_t::debug: cDebug(); break;
-            case Command_t::Undefined: throw CommandError("Unknown command");
+        case Command_t::quit:
+        case Command_t::exit: cExit(); break;
+        case Command_t::su: cLogin(); break;
+        case Command_t::logout: cLogout(); break;
+        case Command_t::regist: cRegist(); break;
+        case Command_t::passwd: cPasswd(); break;
+        case Command_t::useradd: cUseradd(); break;
+        case Command_t::del: cDelete(); break;
+        case Command_t::show: cShow(); break;
+        case Command_t::buy: cBuy(); break;
+        case Command_t::select: cSelect(); break;
+        case Command_t::modify: cModify(); break;
+        case Command_t::import: cImport(); break;
+        case Command_t::show_finance: cShowFinance(); break;
+        case Command_t::log: cLog(); break;
+        case Command_t::report_finance: cReportFinance(); break;
+        case Command_t::report_employee: cReportEmployee(); break;
+        case Command_t::debug: cDebug(); break;
+        case Command_t::Undefined: throw CommandError("Unknown command");
         }
-        
     }
 
     void Run() {
@@ -489,7 +490,8 @@ class CommandManager {
                                               e.what() << std::endl;
                 std::cout << "Invalid\n";
             } catch (const std::exception &e) {
-                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  >>> " << e.what() << std::endl;
+                if (DEBUG_FLAG) std::cerr << count_line << ":Input: " << input << "  >>> " <<
+                                              e.what() << std::endl;
                 std::cout << "Invalid\n";
                 // break;
             }

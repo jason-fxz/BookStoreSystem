@@ -349,6 +349,10 @@ class LogSystem {
     }
 
     void showFinance(const long long &count = -1) {
+        if (count == 0) {
+            std::cout << '\n';
+            return ;
+        }
         tradeInfo.flush();
         if (count == -1) { // show all
             tradeInfo.file.seekg(0, std::ios::beg);
@@ -365,11 +369,7 @@ class LogSystem {
                 outcome += atof(tmpstr);
             }
         }
-        if (income == 0 && outcome == 0) {
-            std::cout << "\n";
-        } else {
-            std::cout << "+ " << std::fixed << std::setprecision(2) << income << " - " << std::fixed << std::setprecision(2) << outcome << "\n";
-        }
+        std::cout << "+ " << std::fixed << std::setprecision(2) << income << " - " << std::fixed << std::setprecision(2) << outcome << "\n";
     }
 };
 
