@@ -2,7 +2,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(Bookstore)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+
+include(CTest)
+enable_testing()
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/src/
@@ -24,9 +27,7 @@ else()
 	message("Web mode disabled, using `-DWEB_MODE=ON` to enable it")
 endif()
 
-file(GLOB_RECURSE main_src src/*.cpp)
-
-add_executable(code ${main_src}) 
+add_executable(code src/main.cpp) 
 
 if (WEB_MODE)
 	target_link_libraries(code PRIVATE jwt-cpp::jwt-cpp)

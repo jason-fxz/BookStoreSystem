@@ -36,6 +36,7 @@
 *.db
 
 /cmake-build-debug/**
+/build/**
 
 
 # Logs
